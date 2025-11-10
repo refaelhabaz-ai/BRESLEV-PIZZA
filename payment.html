@@ -1,0 +1,65 @@
+
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>תשלום - פיצה ברסלב</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    /* small layout tweaks for payment page */
+    body { background: #fff8f0; font-family: 'Assistant', sans-serif; padding: 2rem; }
+    .payment-wrap { max-width: 900px; margin: 2rem auto; background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 6px 20px rgba(0,0,0,0.08); text-align: center; }
+    iframe { width:100%; height:700px; border: none; border-radius: 8px; }
+    .note { margin-top:1rem; color:#666; font-size:0.95rem; }
+  </style>
+</head>
+<body>
+  <div class="payment-wrap">
+    <h1>תשלום מאובטח</h1>
+    <p>טופס התשלום מוצג בתוך העמוד — כל האבטחה והעיבוד מבוצעים על ידי ספק התשלומים.</p>
+
+    <!-- iframe will be injected by JS after getting payment URL from backend -->
+    <div id="iframe-container">
+      <p>טוען טופס תשלום...</p>
+    </div>
+
+    <p class="note">אם הטופס לא נטען — וודא שסביבת השרת וה־ENV של Hyp קיימים.</p>
+  </div>
+
+  <script>
+  async function initPayment() {
+    try {
+      // בקשת יצירת תשלום מהשרת
+      const orderId = 'ORDER_' + Date.now();
+      // amount צריך להגיע מהעגלת הקניות שלך — כאן דוגמה ל־₪100
+      const amount = window.localStorage.getItem('cart_total') || 100;
+
+      const resp = await fetch('/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: amount, orderId: orderId })
+      });
+      const data = await resp.json();
+      if (data.paymentUrl) {
+        // אם ה־provider תומך בהטמעה ב־iframe, אנו מציבים את ה־paymentUrl בתוך iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = data.paymentUrl;
+        iframe.title = 'תשלום מאובטח';
+        document.getElementById('iframe-container').innerHTML = '';
+        document.getElementById('iframe-container').appendChild(iframe);
+
+        // אופציה: ניתן להאזין ל postMessage מה־iframe כדי לזהות סיום תשלום אם הספק תומך בכך
+      } else {
+        document.getElementById('iframe-container').innerHTML = '<p>לא ניתן ליצור תשלום. בדוק את השרת.</p>';
+      }
+    } catch (err) {
+      console.error(err);
+      document.getElementById('iframe-container').innerHTML = '<p>שגיאה ביצירת תשלום — בדוק את ה־Console.</p>';
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', initPayment);
+  </script>
+</body>
+</html>
