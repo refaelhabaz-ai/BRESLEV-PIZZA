@@ -1,0 +1,12 @@
+{
+  "name": "breslev-pizza",
+  "version": "1.0.0",
+  "description": "אתר פיצה ברסלב - גרסת דמו",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
